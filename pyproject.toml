@@ -1,0 +1,46 @@
+[project]
+name = "devdocs-mcp-server"
+version = "0.1.0"
+description = "MCP server for searching and reading DevDocs documentation"
+authors = [
+    {name = "Jiajie Chen",email = "c@jia.je"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp>=0.13.0",
+    "markdownify>=0.14.1",
+    "beautifulsoup4>=4.12.3",
+    "click>=8.1.8",
+    "fuzzywuzzy>=0.18.0",
+    "python-Levenshtein>=0.26.1",
+]
+
+[project.scripts]
+devdocs-mcp-server = "devdocs_mcp_server.cli:main"
+devdocs = "devdocs_mcp_server.cli:search_cli"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [{include = "devdocs_mcp_server"}]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.4"
+pytest-asyncio = "^0.24.0"
+ruff = "^0.9.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
