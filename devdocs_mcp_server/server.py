@@ -6,8 +6,8 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 from fastmcp import FastMCP
-from fuzzywuzzy import fuzz, process
 from markdownify import markdownify as md
+from rapidfuzz import fuzz, process
 
 mcp = FastMCP("DevDocs MCP Server")
 
@@ -116,7 +116,7 @@ class DevDocsManager:
         matches = process.extract(query, file_names, limit=limit, scorer=fuzz.WRatio)
 
         results = []
-        for match, score in matches:
+        for match, score, _ in matches:
             if score > 60:  # Only include matches with decent similarity
                 file_path, _, doc_set_name = next(
                     (f, s, ds) for f, s, ds in files_to_search if s == match
@@ -161,7 +161,7 @@ class DevDocsManager:
             if match_result is None:
                 return None
 
-            match, score = match_result
+            match, score, _ = match_result
 
             if score > 70:
                 full_path = self.docs_dir / match
