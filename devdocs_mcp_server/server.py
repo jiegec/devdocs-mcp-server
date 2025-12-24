@@ -47,6 +47,21 @@ class DevDocsManager:
         # Fall back to docs (will be created by extract script)
         return Path("docs")
 
+    def _normalize_stem(self, stem: str) -> str:
+        """
+        Normalize file stem by replacing dots with spaces.
+
+        DevDocs uses prefixes like 'struct.', 'enum.', 'fn.', etc.
+        Converting to spaces makes fuzzy matching work better with natural queries.
+
+        Args:
+            stem: Original file stem
+
+        Returns:
+            Normalized stem with dots replaced by spaces
+        """
+        return stem.replace(".", " ")
+
     def list_available_docs(self) -> list[str]:
         """List all available documentation sets."""
         if not self.docs_dir.exists():
@@ -111,25 +126,35 @@ class DevDocsManager:
         if not files_to_search:
             return []
 
-        # Use fuzzy matching on file names
-        file_names = [stem for _, stem, _ in files_to_search]
-        matches = process.extract(query, file_names, limit=limit, scorer=fuzz.WRatio)
+        # Match against normalized file stems (dots -> spaces)
+        file_stems = [self._normalize_stem(stem) for _, stem, _ in files_to_search]
+        # Get more candidates to allow boosting to affect ranking
+        candidate_limit = limit * 10  # Get 10x more candidates
+        matches = process.extract(query, file_stems, limit=candidate_limit, scorer=fuzz.WRatio)
 
         results = []
         for match, score, _ in matches:
             if score > 60:  # Only include matches with decent similarity
-                file_path, _, doc_set_name = next(
-                    (f, s, ds) for f, s, ds in files_to_search if s == match
+                # Match normalized stem back to original file
+                file_path, original_stem, doc_set_name = next(
+                    (f, s, ds) for f, s, ds in files_to_search
+                    if self._normalize_stem(s) == match
                 )
+
+                # Boost score if doc_set name appears as a separate word in query
+                final_score = score
+                if not doc_set and doc_set_name.lower() in query.lower().split():
+                    final_score += 15  # Boost matches from relevant doc_set
+
                 relative_path = file_path.relative_to(self.docs_dir)
                 results.append({
                     "path": str(relative_path),
-                    "name": match,
-                    "score": score,
+                    "name": match,  # Use normalized stem for display
+                    "score": final_score,
                     "doc_set": doc_set_name,
                 })
 
-        # Sort by score and limit
+        # Sort by boosted score and limit
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:limit]
 
@@ -155,8 +180,9 @@ class DevDocsManager:
             if not html_files:
                 return None
 
-            file_names = [str(f.relative_to(self.docs_dir)) for f in html_files]
-            match_result = process.extractOne(path, file_names, scorer=fuzz.WRatio)
+            # Use normalized stems for fuzzy matching
+            file_stems = [self._normalize_stem(f.stem) for f in html_files]
+            match_result = process.extractOne(path, file_stems, scorer=fuzz.WRatio)
 
             if match_result is None:
                 return None
@@ -164,7 +190,8 @@ class DevDocsManager:
             match, score, _ = match_result
 
             if score > 70:
-                full_path = self.docs_dir / match
+                # Find the original file path from the matched normalized stem
+                full_path = next(f for f in html_files if self._normalize_stem(f.stem) == match)
             else:
                 return None
 
