@@ -35,10 +35,10 @@ def extract_docs(output_dir: str, docker_image: str = "ghcr.io/freecodecamp/devd
 
         # Copy the docs directory from the container
         subprocess.run(
-            ["docker", "cp", f"{container_id}:/devdocs/public/docs", str(output_path)],
+            ["docker", "cp", f"{container_id}:/devdocs/public/docs/.", str(output_path)],
             check=True,
         )
-        print(f"Successfully extracted docs to {output_path / 'docs'}")
+        print(f"Successfully extracted docs to {output_path}")
 
     except subprocess.CalledProcessError as e:
         print(f"Error extracting docs: {e}", file=sys.stderr)

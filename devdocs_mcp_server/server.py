@@ -35,7 +35,6 @@ class DevDocsManager:
     def _find_docs_dir(self) -> Path:
         """Find the docs directory in common locations."""
         candidates = [
-            Path("docs/docs"),  # Default extraction location
             Path("docs"),
             Path("/usr/local/share/devdocs/docs"),
             Path.home() / ".local/share/devdocs/docs",
@@ -45,8 +44,8 @@ class DevDocsManager:
             if candidate.exists() and candidate.is_dir():
                 return candidate
 
-        # Fall back to docs/docs (will be created by extract script)
-        return Path("docs/docs")
+        # Fall back to docs (will be created by extract script)
+        return Path("docs")
 
     def list_available_docs(self) -> list[str]:
         """List all available documentation sets."""

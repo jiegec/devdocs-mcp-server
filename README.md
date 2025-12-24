@@ -26,7 +26,7 @@ First, extract documentation from the DevDocs Docker image:
 python -m devdocs_mcp_server.extract_docs
 ```
 
-This will download the latest DevDocs documentation and extract it to the `docs/docs` directory.
+This will download the latest DevDocs documentation and extract it to the `docs` directory.
 
 ### MCP Server
 
