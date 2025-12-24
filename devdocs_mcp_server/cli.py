@@ -70,7 +70,7 @@ def server(docs_dir: str | None, transport: str, host: str, port: int) -> None:
             console.print(f"[dim]Docs directory: {docs_dir}[/dim]")
         import uvicorn
 
-        mcp.run(transport="http", port=8000)
+        mcp.run(transport="http", host=host, port=port)
 
 
 @main.command()
