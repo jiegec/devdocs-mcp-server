@@ -2,7 +2,6 @@
 """Script to extract documentation from the DevDocs Docker image."""
 
 import argparse
-import os
 import subprocess
 import sys
 from pathlib import Path

@@ -52,7 +52,7 @@ def server(docs_dir: str | None, transport: str, port: int) -> None:
     from .server import mcp
 
     if transport == "stdio":
-        console.print(f"[green]Starting DevDocs MCP Server (stdio mode)[/green]")
+        console.print("[green]Starting DevDocs MCP Server (stdio mode)[/green]")
         if docs_dir:
             console.print(f"[dim]Docs directory: {docs_dir}[/dim]")
         mcp.run(transport="stdio")
@@ -94,7 +94,8 @@ def search(query: str, doc_set: str | None, docs_dir: str | None, limit: int) ->
             f"[red]Error: Docs directory not found at {manager.docs_dir}[/red]"
         )
         console.print(
-            "[yellow]Run 'python -m devdocs_mcp_server.extract_docs' to extract docs from Docker[/yellow]"
+            "[yellow]Run 'python -m devdocs_mcp_server.extract_docs' "
+            "to extract docs from Docker[/yellow]"
         )
         sys.exit(1)
 
@@ -142,7 +143,8 @@ def read(path: str, docs_dir: str | None) -> None:
             f"[red]Error: Docs directory not found at {manager.docs_dir}[/red]"
         )
         console.print(
-            "[yellow]Run 'python -m devdocs_mcp_server.extract_docs' to extract docs from Docker[/yellow]"
+            "[yellow]Run 'python -m devdocs_mcp_server.extract_docs' "
+            "to extract docs from Docker[/yellow]"
         )
         sys.exit(1)
 
@@ -174,7 +176,8 @@ def list_sets(docs_dir: str | None) -> None:
             f"[red]Error: Docs directory not found at {manager.docs_dir}[/red]"
         )
         console.print(
-            "[yellow]Run 'python -m devdocs_mcp_server.extract_docs' to extract docs from Docker[/yellow]"
+            "[yellow]Run 'python -m devdocs_mcp_server.extract_docs' "
+            "to extract docs from Docker[/yellow]"
         )
         sys.exit(1)
 

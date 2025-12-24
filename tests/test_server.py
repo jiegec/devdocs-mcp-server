@@ -1,6 +1,5 @@
 """Tests for the DevDocs MCP Server."""
 
-import os
 import tempfile
 from pathlib import Path
 

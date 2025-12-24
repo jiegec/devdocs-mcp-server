@@ -5,9 +5,9 @@ from pathlib import Path
 from typing import Any
 
 from bs4 import BeautifulSoup
+from fastmcp import FastMCP
 from fuzzywuzzy import fuzz, process
 from markdownify import markdownify as md
-from fastmcp import FastMCP
 
 mcp = FastMCP("DevDocs MCP Server")
 
@@ -57,7 +57,9 @@ class DevDocsManager:
                 docs.append(item.name)
         return sorted(docs)
 
-    def search_docs(self, query: str, doc_set: str | None = None, limit: int = 20) -> list[dict[str, Any]]:
+    def search_docs(
+        self, query: str, doc_set: str | None = None, limit: int = 20
+    ) -> list[dict[str, Any]]:
         """
         Search for documentation entries.
 
@@ -70,6 +72,9 @@ class DevDocsManager:
             List of matching documentation entries
         """
         results = []
+
+        if not self.docs_dir.exists():
+            return []
 
         if doc_set:
             doc_dirs = [self.docs_dir / doc_set]
@@ -117,9 +122,20 @@ class DevDocsManager:
 
         if not full_path.exists() and fuzzy_match:
             # Try fuzzy matching
+            if not self.docs_dir.exists():
+                return None
+
             html_files = list(self.docs_dir.rglob("*.html"))
+            if not html_files:
+                return None
+
             file_names = [str(f.relative_to(self.docs_dir)) for f in html_files]
-            match, score = process.extractOne(path, file_names, scorer=fuzz.WRatio)
+            match_result = process.extractOne(path, file_names, scorer=fuzz.WRatio)
+
+            if match_result is None:
+                return None
+
+            match, score = match_result
 
             if score > 70:
                 full_path = self.docs_dir / match
@@ -130,7 +146,7 @@ class DevDocsManager:
             return None
 
         try:
-            with open(full_path, "r", encoding="utf-8") as f:
+            with open(full_path, encoding="utf-8") as f:
                 html_content = f.read()
 
             # Parse HTML and convert to Markdown
