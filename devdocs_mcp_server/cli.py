@@ -29,22 +29,28 @@ def main() -> None:
 )
 @click.option(
     "--transport",
-    type=click.Choice(["stdio", "sse"]),
+    type=click.Choice(["stdio", "http"]),
     default="stdio",
     help="Transport protocol for the MCP server",
+)
+@click.option(
+    "--host",
+    type=str,
+    default="0.0.0.0",
+    help="Host to bind to for HTTP transport",
 )
 @click.option(
     "--port",
     type=int,
     default=8000,
-    help="Port for SSE transport",
+    help="Port for HTTP transport",
 )
-def server(docs_dir: str | None, transport: str, port: int) -> None:
+def server(docs_dir: str | None, transport: str, host: str, port: int) -> None:
     """
     Start the MCP server.
 
     By default, the server runs in stdio mode for use with MCP clients.
-    Use --transport sse for HTTP/Streaming HTTP mode.
+    Use --transport http for HTTP/Streaming HTTP mode.
     """
     if docs_dir:
         os.environ["DEVDOCS_DOCS_DIR"] = str(Path(docs_dir).resolve())
@@ -57,10 +63,14 @@ def server(docs_dir: str | None, transport: str, port: int) -> None:
             console.print(f"[dim]Docs directory: {docs_dir}[/dim]")
         mcp.run(transport="stdio")
     else:
-        console.print(f"[green]Starting DevDocs MCP Server (SSE mode on port {port})[/green]")
+        console.print(
+            f"[green]Starting DevDocs MCP Server (HTTP mode on {host}:{port})[/green]"
+        )
         if docs_dir:
             console.print(f"[dim]Docs directory: {docs_dir}[/dim]")
-        mcp.run(transport="sse", port=port)
+        import uvicorn
+
+        mcp.run(transport="http", port=8000)
 
 
 @main.command()
