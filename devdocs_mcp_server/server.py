@@ -29,6 +29,8 @@ class DevDocsManager:
             self.docs_dir = self._find_docs_dir()
 
         self._index_cache: dict[str, list[str]] = {}
+        self._file_list_cache: dict[str, list[tuple[Path, str, str]]] | None = None
+        self._all_files_cache: list[tuple[Path, str, str]] | None = None
 
     def _find_docs_dir(self) -> Path:
         """Find the docs directory in common locations."""
@@ -57,6 +59,31 @@ class DevDocsManager:
                 docs.append(item.name)
         return sorted(docs)
 
+    def _build_file_cache(self) -> None:
+        """Build cache of all HTML files for faster searching."""
+        if self._all_files_cache is not None:
+            return
+
+        self._all_files_cache = []
+        self._file_list_cache = {}
+
+        if not self.docs_dir.exists():
+            return
+
+        for doc_dir in self.docs_dir.iterdir():
+            if not doc_dir.is_dir() or doc_dir.name.startswith("."):
+                continue
+
+            doc_set_name = doc_dir.name
+            doc_files = []
+
+            for html_file in doc_dir.rglob("*.html"):
+                file_info = (html_file, html_file.stem, doc_set_name)
+                doc_files.append(file_info)
+                self._all_files_cache.append(file_info)
+
+            self._file_list_cache[doc_set_name] = doc_files
+
     def search_docs(
         self, query: str, doc_set: str | None = None, limit: int = 20
     ) -> list[dict[str, Any]]:
@@ -71,37 +98,37 @@ class DevDocsManager:
         Returns:
             List of matching documentation entries
         """
-        results = []
-
         if not self.docs_dir.exists():
             return []
 
+        # Build cache on first search
+        self._build_file_cache()
+
         if doc_set:
-            doc_dirs = [self.docs_dir / doc_set]
+            files_to_search = self._file_list_cache.get(doc_set, [])
         else:
-            doc_dirs = [d for d in self.docs_dir.iterdir() if d.is_dir()]
+            files_to_search = self._all_files_cache
 
-        for doc_dir in doc_dirs:
-            if not doc_dir.exists():
-                continue
+        if not files_to_search:
+            return []
 
-            # Search for .html files in the doc set
-            html_files = list(doc_dir.rglob("*.html"))
+        # Use fuzzy matching on file names
+        file_names = [stem for _, stem, _ in files_to_search]
+        matches = process.extract(query, file_names, limit=limit, scorer=fuzz.WRatio)
 
-            # Use fuzzy matching on file names
-            file_names = [f.stem for f in html_files]
-            matches = process.extract(query, file_names, limit=limit, scorer=fuzz.WRatio)
-
-            for match, score in matches:
-                if score > 60:  # Only include matches with decent similarity
-                    file_path = next(f for f in html_files if f.stem == match)
-                    relative_path = file_path.relative_to(self.docs_dir)
-                    results.append({
-                        "path": str(relative_path),
-                        "name": match,
-                        "score": score,
-                        "doc_set": relative_path.parts[0] if relative_path.parts else "",
-                    })
+        results = []
+        for match, score in matches:
+            if score > 60:  # Only include matches with decent similarity
+                file_path, _, doc_set_name = next(
+                    (f, s, ds) for f, s, ds in files_to_search if s == match
+                )
+                relative_path = file_path.relative_to(self.docs_dir)
+                results.append({
+                    "path": str(relative_path),
+                    "name": match,
+                    "score": score,
+                    "doc_set": doc_set_name,
+                })
 
         # Sort by score and limit
         results.sort(key=lambda x: x["score"], reverse=True)
