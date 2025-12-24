@@ -33,13 +33,13 @@ This will download the latest DevDocs documentation and extract it to the `docs/
 Start the MCP server in stdio mode (default for MCP clients):
 
 ```bash
-devdocs-mcp-server server
+devdocs server
 ```
 
 Or start the server in SSE mode for HTTP access:
 
 ```bash
-devdocs-mcp-server server --transport sse --port 8000
+devdocs server --transport sse --port 8000
 ```
 
 ### CLI

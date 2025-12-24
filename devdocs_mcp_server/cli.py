@@ -196,11 +196,5 @@ def list_sets(docs_dir: str | None) -> None:
     console.print(table)
 
 
-def search_cli() -> None:
-    """Entry point for 'devdocs' command."""
-    # Set the main function to handle the CLI
-    main(standalone_mode=False)
-
-
 if __name__ == "__main__":
     main()

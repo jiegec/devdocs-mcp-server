@@ -17,8 +17,7 @@ dependencies = [
 ]
 
 [project.scripts]
-devdocs-mcp-server = "devdocs_mcp_server.cli:main"
-devdocs = "devdocs_mcp_server.cli:search_cli"
+devdocs = "devdocs_mcp_server.cli:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
