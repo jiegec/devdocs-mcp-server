@@ -133,3 +133,97 @@ def test_empty_docs_dir():
 
     content = manager.read_doc("test.html")
     assert content is None
+
+
+def test_search_no_duplicate_paths(temp_docs_dir):
+    """Test that search results don't contain duplicate paths."""
+    manager = DevDocsManager(str(temp_docs_dir))
+
+    # Create multiple doc sets with files having the same stem
+    javascript_path = temp_docs_dir / "javascript"
+    javascript_path.mkdir()
+
+    js_list_html = javascript_path / "list.html"
+    js_list_html.write_text("<html><body>JavaScript List</body></html>")
+
+    typescript_path = temp_docs_dir / "typescript"
+    typescript_path.mkdir()
+
+    ts_list_html = typescript_path / "list.html"
+    ts_list_html.write_text("<html><body>TypeScript List</body></html>")
+
+    # Clear cache to pick up new files
+    manager._all_files_cache = None
+    manager._file_list_cache = None
+
+    results = manager.search_docs("list", limit=20)
+
+    # Check no duplicate paths
+    paths = [r["path"] for r in results]
+    assert len(paths) == len(set(paths)), "Duplicate paths found in results"
+
+
+def test_search_multiple_files_same_stem(temp_docs_dir):
+    """Test that multiple files with the same stem are all returned."""
+    manager = DevDocsManager(str(temp_docs_dir))
+
+    # Create multiple doc sets with files having the same stem
+    javascript_path = temp_docs_dir / "javascript"
+    javascript_path.mkdir()
+
+    js_list_html = javascript_path / "list.html"
+    js_list_html.write_text("<html><body>JavaScript List</body></html>")
+
+    typescript_path = temp_docs_dir / "typescript"
+    typescript_path.mkdir()
+
+    ts_list_html = typescript_path / "list.html"
+    ts_list_html.write_text("<html><body>TypeScript List</body></html>")
+
+    rust_path = temp_docs_dir / "rust"
+    rust_path.mkdir()
+
+    rust_list_html = rust_path / "list.html"
+    rust_list_html.write_text("<html><body>Rust List</body></html>")
+
+    # Clear cache to pick up new files
+    manager._all_files_cache = None
+    manager._file_list_cache = None
+
+    results = manager.search_docs("list", limit=10)
+
+    # All three files should be in results (same stem "list", different paths)
+    doc_sets = {r["doc_set"] for r in results}
+    assert "javascript" in doc_sets
+    assert "typescript" in doc_sets
+    assert "rust" in doc_sets
+
+    # All should have the same name (normalized stem)
+    names = {r["name"] for r in results}
+    assert len(names) == 1
+    assert "list" in names
+
+
+def test_search_limit_after_expansion(temp_docs_dir):
+    """Test that limit is applied after expanding stems to files."""
+    manager = DevDocsManager(str(temp_docs_dir))
+
+    # Create many doc sets with files having the same stem
+    for i in range(15):
+        doc_path = temp_docs_dir / f"lang{i}"
+        doc_path.mkdir()
+
+        list_html = doc_path / "list.html"
+        list_html.write_text(f"<html><body>List {i}</body></html>")
+
+    # Clear cache to pick up new files
+    manager._all_files_cache = None
+    manager._file_list_cache = None
+
+    results = manager.search_docs("list", limit=5)
+
+    # Should return exactly 5 results (limit applied after expansion)
+    assert len(results) == 5
+
+    # All should have the same stem "list"
+    assert all(r["name"] == "list" for r in results)

@@ -126,33 +126,41 @@ class DevDocsManager:
         if not files_to_search:
             return []
 
-        # Match against normalized file stems (dots -> spaces)
-        file_stems = [self._normalize_stem(stem) for _, stem, _ in files_to_search]
-        # Get more candidates to allow boosting to affect ranking
+        # Group files by normalized stem for deduplication
+        stem_to_files: dict[str, list[tuple[Path, str, str]]] = {}
+        for file_path, stem, doc_set_name in files_to_search:
+            normalized_stem = self._normalize_stem(stem)
+            if normalized_stem not in stem_to_files:
+                stem_to_files[normalized_stem] = []
+            stem_to_files[normalized_stem].append((file_path, stem, doc_set_name))
+
+        # Match against unique normalized stems
         candidate_limit = limit * 10  # Get 10x more candidates
-        matches = process.extract(query, file_stems, limit=candidate_limit, scorer=fuzz.WRatio)
+        unique_stems = list(stem_to_files.keys())
+        matches = process.extract(
+            query,
+            unique_stems,
+            limit=candidate_limit,
+            scorer=fuzz.WRatio,
+        )
 
         results = []
         for match, score, _ in matches:
             if score > 60:  # Only include matches with decent similarity
-                # Match normalized stem back to original file
-                file_path, original_stem, doc_set_name = next(
-                    (f, s, ds) for f, s, ds in files_to_search
-                    if self._normalize_stem(s) == match
-                )
+                # Add all files that have this matching stem
+                for file_path, original_stem, doc_set_name in stem_to_files[match]:
+                    # Boost score if doc_set name appears as a separate word in query
+                    final_score = score
+                    if not doc_set and doc_set_name.lower() in query.lower().split():
+                        final_score += 15  # Boost matches from relevant doc_set
 
-                # Boost score if doc_set name appears as a separate word in query
-                final_score = score
-                if not doc_set and doc_set_name.lower() in query.lower().split():
-                    final_score += 15  # Boost matches from relevant doc_set
-
-                relative_path = file_path.relative_to(self.docs_dir)
-                results.append({
-                    "path": str(relative_path),
-                    "name": match,  # Use normalized stem for display
-                    "score": final_score,
-                    "doc_set": doc_set_name,
-                })
+                    relative_path = file_path.relative_to(self.docs_dir)
+                    results.append({
+                        "path": str(relative_path),
+                        "name": match,  # Use normalized stem for display
+                        "score": final_score,
+                        "doc_set": doc_set_name,
+                    })
 
         # Sort by boosted score and limit
         results.sort(key=lambda x: x["score"], reverse=True)
