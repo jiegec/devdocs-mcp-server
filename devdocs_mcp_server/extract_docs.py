@@ -56,9 +56,7 @@ def extract_docs(output_dir: str, docker_image: str = "ghcr.io/freecodecamp/devd
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Extract documentation from DevDocs Docker image"
-    )
+    parser = argparse.ArgumentParser(description="Extract documentation from DevDocs Docker image")
     parser.add_argument(
         "-o",
         "--output",

@@ -63,9 +63,7 @@ def server(docs_dir: str | None, transport: str, host: str, port: int) -> None:
             console.print(f"[dim]Docs directory: {docs_dir}[/dim]")
         mcp.run(transport="stdio")
     else:
-        console.print(
-            f"[green]Starting DevDocs MCP Server (HTTP mode on {host}:{port})[/green]"
-        )
+        console.print(f"[green]Starting DevDocs MCP Server (HTTP mode on {host}:{port})[/green]")
         if docs_dir:
             console.print(f"[dim]Docs directory: {docs_dir}[/dim]")
         mcp.run(transport="http", host=host, port=port)
@@ -98,9 +96,7 @@ def search(query: str, doc_set: str | None, docs_dir: str | None, limit: int) ->
     manager = DevDocsManager(docs_dir)
 
     if not manager.docs_dir.exists():
-        console.print(
-            f"[red]Error: Docs directory not found at {manager.docs_dir}[/red]"
-        )
+        console.print(f"[red]Error: Docs directory not found at {manager.docs_dir}[/red]")
         console.print(
             "[yellow]Run 'python -m devdocs_mcp_server.extract_docs' "
             "to extract docs from Docker[/yellow]"
@@ -147,9 +143,7 @@ def read(path: str, docs_dir: str | None) -> None:
     manager = DevDocsManager(docs_dir)
 
     if not manager.docs_dir.exists():
-        console.print(
-            f"[red]Error: Docs directory not found at {manager.docs_dir}[/red]"
-        )
+        console.print(f"[red]Error: Docs directory not found at {manager.docs_dir}[/red]")
         console.print(
             "[yellow]Run 'python -m devdocs_mcp_server.extract_docs' "
             "to extract docs from Docker[/yellow]"
@@ -180,9 +174,7 @@ def list_sets(docs_dir: str | None) -> None:
     manager = DevDocsManager(docs_dir)
 
     if not manager.docs_dir.exists():
-        console.print(
-            f"[red]Error: Docs directory not found at {manager.docs_dir}[/red]"
-        )
+        console.print(f"[red]Error: Docs directory not found at {manager.docs_dir}[/red]")
         console.print(
             "[yellow]Run 'python -m devdocs_mcp_server.extract_docs' "
             "to extract docs from Docker[/yellow]"

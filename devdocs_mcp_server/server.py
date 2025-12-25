@@ -155,12 +155,14 @@ class DevDocsManager:
                         final_score += 15  # Boost matches from relevant doc_set
 
                     relative_path = file_path.relative_to(self.docs_dir)
-                    results.append({
-                        "path": str(relative_path),
-                        "name": match,  # Use normalized stem for display
-                        "score": final_score,
-                        "doc_set": doc_set_name,
-                    })
+                    results.append(
+                        {
+                            "path": str(relative_path),
+                            "name": match,  # Use normalized stem for display
+                            "score": final_score,
+                            "doc_set": doc_set_name,
+                        }
+                    )
 
         # Sort by boosted score and limit
         results.sort(key=lambda x: x["score"], reverse=True)

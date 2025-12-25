@@ -103,6 +103,7 @@ def test_get_manager_singleton():
     """Test that get_manager returns the same instance."""
     # Clear the global manager
     import devdocs_mcp_server.server
+
     devdocs_mcp_server.server._manager = None
 
     manager1 = get_manager()
@@ -116,6 +117,7 @@ def test_get_manager_with_env_var(temp_docs_dir, monkeypatch):
 
     # Clear the global manager
     import devdocs_mcp_server.server
+
     devdocs_mcp_server.server._manager = None
 
     manager = get_manager()
